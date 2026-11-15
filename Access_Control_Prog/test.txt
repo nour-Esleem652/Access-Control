@@ -1,0 +1,69 @@
+class RBACSystem {
+    private $rolePermissions = [];
+    private $userRoles = [];
+}
+انشاءت الكلاس عشان اقدر اوصل و اتحكم بالادوار و قمت بانشاء مصفوفة لتخزين الصلاحيات لكل وبجيكت مسموح له بالقيام بدور معين  و قمت بانشاء (User) بالدور المخصص له 
+public function __construct() {
+    $this->rolePermissions = [
+        'Admin'    => ['Create', 'View', 'Update', 'Delete'],
+        'Manager'  => ['View', 'Update'],
+        'Customer' => ['View']
+    ];
+}
+قمت بانشاء الدالة تعمل تلقائيا بمجرد انشاء وبجيكت جديد من الكلاس ثم قمت بتعريف مصفوفة ترابطية تحدد العمليات المسموحة لكل دور
+حيث ان المشرف يمتلك كامل الصلاحيات و المدير يمتلك صلاحية العرض و التعديل و الزبون يمتلك صلاحية العرض فقط 
+
+دالة تأخذ اسم المستخدم والدور المراد إسناده له
+public function assignRole($username, $role) {
+تفحص الدالة إذا كان الدور مدخلاً وصحيحاً وموجوداً في مصفوفة الصلاحيات
+    if (array_key_exists($role, $this->rolePermissions)) {
+في حال كان الدور صحيحاً، يربط اسم المستخدم بهذا الدور وتخزينه في مصفوفة اليوزر نيم
+        $this->userRoles[$username] = $role;
+ اذ كان صحيح يطبع نجاح المهمة و اسم المستخدم و الدور الخاص فيه 
+        echo "[ASSIGNMENT SUCCESS] User '$username' assigned to role '$role'.\n";
+    } else {
+        echo "[ASSIGNMENT ERROR] Role '$role' does not exist.\n";
+    }
+}
+
+
+public function checkPermission($username, $action, $resource = 'Account') {
+     التحقق من وجود المستخدم
+المستخدم مسجل في النظام أم لا. إذا لم يكن مسجلاً، تُرجع
+    if (!isset($this->userRoles[$username])) {
+        echo "[ACCESS DENIED] User '$username' is not registered in the system.\n";
+        return false;
+    }
+جلب الدور والصلاحيات
+ معرفة دور المستخدم
+    $userRole = $this->userRoles[$username];
+    $allowedPermissions = $this->rolePermissions[$userRole];
+فحص العمليات واتخاذ القرار
+    if (in_array($action, $allowedPermissions)) {
+        echo "[ACCESS GRANTED] User '$username' ($userRole) -> Action '$action' on '$resource': ALLOWED\n";
+        return true;
+    } else {
+        echo "[ACCESS DENIED] User '$username' ($userRole) -> Action '$action' on '$resource': DENIED\n";
+        return false;
+    }
+}
+
+
+ إنشـاء كائن جديد من النظام
+$rbac = new RBACSystem();
+
+ تعيين الأدوار للمستخدمين
+$rbac->assignRole("Alice", "Admin");
+$rbac->assignRole("Bob", "Manager");
+$rbac->assignRole("Charlie", "Customer");
+
+ اختبار الصلاحيات على كائن "Account"
+$rbac->checkPermission("Alice", "Create");
+$rbac->checkPermission("Alice", "Delete");
+
+$rbac->checkPermission("Bob", "Create"); // سيعطي DENIED
+$rbac->checkPermission("Bob", "Update"); // سيعطي ALLOWED
+
+$rbac->checkPermission("Charlie", "View");   // سيعطي ALLOWED
+$rbac->checkPermission("Charlie", "Delete"); // سيعطي DENIED
+
